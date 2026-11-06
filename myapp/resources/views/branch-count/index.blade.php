@@ -24,12 +24,19 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1
 .wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
 h1{font-family:var(--f-display);font-weight:700;font-size:34px;letter-spacing:.01em;margin:0;text-wrap:balance}
 .sub{color:var(--muted);margin:4px 0 0}
-header,.drop,#clientmsg,.note{max-width:760px}
+.wrap > header,
+.wrap > .drop,
+.wrap > #clientmsg,
+.wrap > .note,
+.wrap > #problems,
+.wrap > .bar{width:100%;max-width:760px;margin-left:auto;margin-right:auto}
+.wrap > header{text-align:center}
+.bar{justify-content:center}
 .drop{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:26px 16px;border:2px dashed var(--line);
   background:var(--surface);border-radius:6px;transition:border-color .15s,background .15s}
 .drop.over{border-color:var(--accent);background:var(--accent-soft)}
-.drop b{font-family:var(--f-display);font-size:22px;font-weight:600}
-.drop p{margin:0;color:var(--muted);max-width:46ch}
+.drop b{font-family:var(--f-display);font-size:22px;font-weight:700}
+.drop p{margin:0;color:var(--muted);max-width:100ch}
 .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 button{font:inherit;font-weight:600;cursor:pointer;border-radius:5px;padding:9px 16px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
