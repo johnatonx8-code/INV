@@ -273,26 +273,26 @@ th.sort:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
     return row.c;
   }
 
-  function rowHtml(row) {
-    var e = htmlEsc;
+    function rowHtml(row) {
+    var e = htmlEsc, B = 'border:1px solid #000000;';
     if (!row || row.t === 'gap') return '<td></td><td></td><td></td><td></td>';
     if (row.t === 'title') {
-      return '<td colspan="4" align="center" style="text-align:center;font-weight:bold;font-size:14pt"><b><font size="5" style="font-size:14pt">' + e(row.name) + '</font></b></td>';
+      return '<td colspan="4" align="center" style="' + B + 'text-align:center;font-weight:bold;font-size:14pt"><b><font size="5" style="font-size:14pt">' + e(row.name) + '</font></b></td>';
     }
     if (row.t === 'head') {
-      return '<td style="font-weight:bold;text-align:left"><b>#</b></td>' +
-             '<td style="font-weight:bold;text-align:left"><b>Brand</b></td>' +
-             '<td style="font-weight:bold;text-align:left"><b>Model</b></td>' +
-             '<td align="center" style="font-weight:bold;text-align:center"><b>Total</b></td>';
+      return '<td style="' + B + 'font-weight:bold;text-align:left"><b>#</b></td>' +
+             '<td style="' + B + 'font-weight:bold;text-align:left"><b>Brand</b></td>' +
+             '<td style="' + B + 'font-weight:bold;text-align:left"><b>Model</b></td>' +
+             '<td align="center" style="' + B + 'font-weight:bold;text-align:center"><b>Total</b></td>';
     }
     if (row.t === 'total') {
-      return '<td colspan="3" align="right" style="text-align:right;font-weight:bold"><b>Total :</b></td>' +
-             '<td align="center" style="text-align:center;font-weight:bold"><b>' + e(row.v) + '</b></td>';
+      return '<td colspan="3" align="right" style="' + B + 'text-align:right;font-weight:bold"><b>Total :</b></td>' +
+             '<td align="center" style="' + B + 'text-align:center;font-weight:bold"><b>' + e(row.v) + '</b></td>';
     }
-    return '<td align="right" style="text-align:right">' + e(row.c[0]) + '</td>' +
-           '<td style="' + AS_TEXT + '">' + e(row.c[1]) + '</td>' +
-           '<td style="' + AS_TEXT + '">' + e(row.c[2]) + '</td>' +
-           '<td align="center" style="text-align:center">' + e(row.c[3]) + '</td>';
+    return '<td align="right" style="' + B + 'text-align:right">' + e(row.c[0]) + '</td>' +
+           '<td style="' + B + AS_TEXT + '">' + e(row.c[1]) + '</td>' +
+           '<td style="' + B + AS_TEXT + '">' + e(row.c[2]) + '</td>' +
+           '<td align="center" style="' + B + 'text-align:center">' + e(row.c[3]) + '</td>';
   }
 
   function gridHtml(list) {
