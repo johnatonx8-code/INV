@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Branch Model Count</title>
+<title>BMC</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 :root{
@@ -76,7 +76,7 @@ th.sort:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
 <body>
 <div class="wrap">
   <header>
-    <h1>Branch Model Count</h1>
+    <h1>Branch Model Counter</h1>
     <p class="sub">Add up to 20 Ending Inventory files. Each file becomes one branch, named after the file. Choose files again to add more branches.</p>
   </header>
 
