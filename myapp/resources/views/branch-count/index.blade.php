@@ -236,54 +236,120 @@ th.sort:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
     if (th && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); sortTable(th); }
   });
 
-  // ---------- copy: same grid as the sheet ----------
-  // One block per branch: name row, header row, data rows, "Total :" row.
-  function blockLines(card) {
-    var name = card.querySelector('.name').value.trim().toUpperCase();
-    var lines = [[name, '', '', ''], ['#', 'Brand', 'Model', 'Total']];
-    Array.prototype.forEach.call(card.querySelectorAll('tbody tr'), function (r) {
-      lines.push(Array.prototype.map.call(r.cells, function (c) { return c.textContent.trim(); }));
-    });
-    lines.push(['Total :', '', '', card.querySelector('.tot').textContent.trim()]);
-    return lines;
+   // ---------- copy: same layout as the sheet, with formatting ----------
+  // Each branch is a block of rows. Blocks go into two side-by-side columns in turn.
+  // The clipboard gets an HTML table (merged title, bold headings, centered totals) and a plain-text copy.
+  var AT = String.fromCharCode(64);
+  var AS_TEXT = "mso-number-format:'\\" + AT + "'"; // keeps Brand and Model as text in Excel
+
+  function htmlEsc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  // Branches go into two side-by-side columns in turn. A blank row separates stacked blocks
-  // and a blank column separates the two columns.
-  function gridText(list) {
-    var side = [[], []], empty = ['', '', '', ''];
+  function blockRows(card) {
+    var rows = [{ t: 'title', name: card.querySelector('.name').value.trim().toUpperCase() }, { t: 'head' }];
+    Array.prototype.forEach.call(card.querySelectorAll('tbody tr'), function (r) {
+      rows.push({ t: 'data', c: Array.prototype.map.call(r.cells, function (c) { return c.textContent.trim(); }) });
+    });
+    rows.push({ t: 'total', v: card.querySelector('.tot').textContent.trim() });
+    return rows;
+  }
+
+  function sideRows(list) {
+    var side = [[], []];
     list.forEach(function (card, i) {
       var col = side[i % 2];
-      if (col.length) col.push(empty);
-      blockLines(card).forEach(function (l) { col.push(l); });
+      if (col.length) col.push({ t: 'gap' });
+      blockRows(card).forEach(function (r) { col.push(r); });
     });
-    var rows = Math.max(side[0].length, side[1].length), out = [];
-    for (var r = 0; r < rows; r++) {
-      var line = (side[0][r] || empty).slice();
-      if (side[1].length) line = line.concat([''], side[1][r] || empty);
+    return side;
+  }
+
+  function rowCells(row) {
+    if (!row || row.t === 'gap') return ['', '', '', ''];
+    if (row.t === 'title') return [row.name, '', '', ''];
+    if (row.t === 'head') return ['#', 'Brand', 'Model', 'Total'];
+    if (row.t === 'total') return ['Total :', '', '', row.v];
+    return row.c;
+  }
+
+  function rowHtml(row) {
+    var e = htmlEsc;
+    if (!row || row.t === 'gap') return '<td></td><td></td><td></td><td></td>';
+    if (row.t === 'title') {
+      return '<td colspan="4" align="center" style="text-align:center;font-weight:bold;font-size:14pt"><b><font size="5" style="font-size:14pt">' + e(row.name) + '</font></b></td>';
+    }
+    if (row.t === 'head') {
+      return '<td style="font-weight:bold;text-align:left"><b>#</b></td>' +
+             '<td style="font-weight:bold;text-align:left"><b>Brand</b></td>' +
+             '<td style="font-weight:bold;text-align:left"><b>Model</b></td>' +
+             '<td align="center" style="font-weight:bold;text-align:center"><b>Total</b></td>';
+    }
+    if (row.t === 'total') {
+      return '<td colspan="3" align="right" style="text-align:right;font-weight:bold"><b>Total :</b></td>' +
+             '<td align="center" style="text-align:center;font-weight:bold"><b>' + e(row.v) + '</b></td>';
+    }
+    return '<td align="right" style="text-align:right">' + e(row.c[0]) + '</td>' +
+           '<td style="' + AS_TEXT + '">' + e(row.c[1]) + '</td>' +
+           '<td style="' + AS_TEXT + '">' + e(row.c[2]) + '</td>' +
+           '<td align="center" style="text-align:center">' + e(row.c[3]) + '</td>';
+  }
+
+  function gridHtml(list) {
+    var side = sideRows(list), n = Math.max(side[0].length, side[1].length), two = side[1].length > 0, out = [];
+    var cols = '<col width="34"><col width="95"><col width="160"><col width="64">';
+    var group = '<colgroup>' + cols + (two ? '<col width="26">' + cols : '') + '</colgroup>';
+    for (var r = 0; r < n; r++) {
+      out.push('<tr>' + rowHtml(side[0][r]) + (two ? '<td></td>' + rowHtml(side[1][r]) : '') + '</tr>');
+    }
+    return '<table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt">' + group + out.join('') + '</table>';
+  }
+
+  function gridText(list) {
+    var side = sideRows(list), n = Math.max(side[0].length, side[1].length), two = side[1].length > 0, out = [];
+    for (var r = 0; r < n; r++) {
+      var line = rowCells(side[0][r]);
+      if (two) line = line.concat([''], rowCells(side[1][r]));
       out.push(line.join('\t'));
     }
     return out.join('\n');
   }
 
-  function copyText(text, btn) {
-    var label = btn.textContent;
-    function done(m) { btn.textContent = m; setTimeout(function () { btn.textContent = label; }, 1600); }
-    function fallback() {
-      var ta = document.createElement('textarea');
-      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select();
-      var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
-      document.body.removeChild(ta); done(ok ? 'Copied' : 'Copy failed');
+  // Older browsers: copy through a selected text box and add the HTML in the copy event.
+  function legacyCopy(html, text) {
+    var ok = false;
+    function onCopy(e) {
+      e.clipboardData.setData('text/html', html);
+      e.clipboardData.setData('text/plain', text);
+      e.preventDefault(); ok = true;
     }
-    try { navigator.clipboard.writeText(text).then(function () { done('Copied'); }, fallback); } catch (e) { fallback(); }
+    var ta = document.createElement('textarea');
+    ta.value = ' '; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.addEventListener('copy', onCopy);
+    try { document.execCommand('copy'); } catch (err) {}
+    document.removeEventListener('copy', onCopy);
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  function copyGrid(list, btn) {
+    var label = btn.textContent, html = gridHtml(list), text = gridText(list);
+    function done(m) { btn.textContent = m; setTimeout(function () { btn.textContent = label; }, 1600); }
+    function legacy() { done(legacyCopy(html, text) ? 'Copied' : 'Copy failed'); }
+    if (navigator.clipboard && window.ClipboardItem) {
+      navigator.clipboard.write([new ClipboardItem({
+        'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([text], { type: 'text/plain' })
+      })]).then(function () { done('Copied'); }, legacy);
+    } else { legacy(); }
   }
 
   var all = document.getElementById('copyall');
-  all.onclick = function () { copyText(gridText(cards), all); };
-  document.addEventListener('click', function (e) {
+  all.onclick = function () { copyGrid(cards, all); };
+    document.addEventListener('click', function (e) {
     var b = e.target.closest('.copy');
-    if (b) copyText(gridText([b.closest('[data-card]')]), b);
+    if (b) copyGrid([b.closest('[data-card]')], b);
   });
 })();
 </script>
